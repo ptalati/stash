@@ -42,7 +42,12 @@ textarea { font: 13px/1.6 "JetBrains Mono", Consolas, monospace; color: #c9cbd1;
 textarea.masked { -webkit-text-security: disc; }
 
 .top { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
-.top button { margin-left: auto; }
+.top .spacer { flex: 1; }
+button.hotkey { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12px; min-width: 140px; }
+button.hotkey.recording { border-color: var(--accent); color: var(--accent); }
+.banner { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--warn-bg); color: var(--warn); border-bottom: 1px solid #5a4520; font-size: 13px; }
+.banner span { flex: 1; }
+.banner[hidden] { display: none; }
 
 .cols { flex: 1; display: flex; min-height: 0; }
 

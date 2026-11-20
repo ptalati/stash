@@ -316,6 +316,87 @@ listen<string>("manager-select", (e) => {
 
 listen("snippets-changed", load);
 
+// ---------- palette hotkey ----------
+
+interface HotkeyInfo { label: string; problem: string | null }
+
+const hk = {
+  button: $<HTMLButtonElement>("hotkey"),
+  banner: $("hotkey-banner"),
+  problem: $("hotkey-problem"),
+  fix: $<HTMLButtonElement>("hotkey-fix"),
+};
+let hkInfo: HotkeyInfo = { label: "", problem: null };
+let recording = false;
+
+function renderHotkey() {
+  hk.button.classList.toggle("recording", recording);
+  hk.button.textContent = recording ? "Press keys… (Esc cancels)" : hkInfo.problem ? "Not set" : hkInfo.label;
+  // Windows delivers a combination another app has registered to that app, so the page never
+  // sees it: nothing happening is the only sign. Say so while recording.
+  if (recording) {
+    setStatus("Press the new combination. If nothing happens, another app already uses it: try a different one.");
+  }
+  hk.banner.hidden = !hkInfo.problem;
+  hk.problem.textContent = hkInfo.problem ?? "";
+}
+
+function startRecording() {
+  recording = true;
+  renderHotkey();
+  hk.button.focus();
+}
+
+const MOD_KEYS = new Set(["Control", "Alt", "Shift", "Meta", "AltGraph"]);
+
+/** Turn a keydown into the plugin's accelerator ("ctrl+alt+KeyV") and a label ("Ctrl+Alt+V"). */
+function comboFrom(e: KeyboardEvent): { accel: string; label: string } | null {
+  if (MOD_KEYS.has(e.key)) return null; // still holding modifiers
+  const mods: [boolean, string, string][] = [
+    [e.ctrlKey, "ctrl", "Ctrl"],
+    [e.altKey, "alt", "Alt"],
+    [e.shiftKey, "shift", "Shift"],
+  ];
+  const on = mods.filter(([down]) => down);
+  const keyLabel = e.code.replace(/^Key/, "").replace(/^Digit/, "");
+  return {
+    accel: [...on.map(([, a]) => a), e.code].join("+"),
+    label: [...on.map(([, , l]) => l), keyLabel].join("+"),
+  };
+}
+
+hk.button.addEventListener("click", startRecording);
+hk.fix.addEventListener("click", startRecording);
+hk.button.addEventListener("blur", () => { if (recording) { recording = false; renderHotkey(); } });
+
+// Capture phase, so the manager's own Ctrl+N / Ctrl+F shortcuts don't fire while recording.
+document.addEventListener(
+  "keydown",
+  async (e) => {
+    if (!recording) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === "Escape") { recording = false; renderHotkey(); return; }
+    const combo = comboFrom(e);
+    if (!combo) return;
+    if (!e.ctrlKey && !e.altKey) {
+      setStatus("Include Ctrl or Alt, so normal typing never opens the palette.", true);
+      return;
+    }
+    recording = false;
+    try {
+      hkInfo = await invoke<HotkeyInfo>("set_hotkey", combo);
+      setStatus(`Palette hotkey is now ${hkInfo.label}`);
+    } catch (err) {
+      setStatus(String(err), true);
+    }
+    renderHotkey();
+  },
+  true,
+);
+
+invoke<HotkeyInfo>("get_hotkey").then((info) => { hkInfo = info; renderHotkey(); });
+
 async function load() {
   try {
     snippets = await invoke<Snippet[]>("list_snippets");

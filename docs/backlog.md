@@ -25,10 +25,15 @@
 - Manager shows "Asks for … · Embeds …" or the error under the body. Parser in src/template.ts.
 - New installs get a "Payment reminder (polite)" seed template.
 
+## Done (hotkey conflicts)
+- Hotkey stored in `%APPDATA%\com.ptalati.stash\settings.json` (plain JSON, not secret).
+- If it can't be registered at startup, the manager opens with an amber banner and "Not set"; tray tooltip says there is no hotkey. Tray left-click still opens the palette.
+- Manager top bar: click the hotkey, press a new combination (needs Ctrl or Alt). The old one stays registered if the new one fails. Tray menu shows the current hotkey.
+- Limitation: a combination another app holds never reaches Stash at all (Windows routes it to that app), so pressing it while recording does nothing; the status line says to try another. Only apps that register global hotkeys are detected; in-app shortcuts can't be.
+
 ## v1 still to do
-1. **Hotkey conflict UX**: tell the user (tray balloon) if Ctrl+Shift+Space is taken, and let them pick another.
-2. Error surfacing for import (currently only stderr).
-3. Unit tests for src/template.ts in the repo (checked ad hoc with node so far).
+1. Error surfacing for import (currently only stderr).
+2. Unit tests for src/template.ts in the repo (checked ad hoc with node so far).
 
 ## Done (release workflow)
 - `.github/workflows/release.yml`: on a `v*` tag, checks the three version files match the tag, builds on windows-latest, publishes the release with the msi and setup.exe. Windows only.

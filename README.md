@@ -16,6 +16,8 @@ The builds aren't code-signed yet, so the first launch shows SmartScreen's "Wind
 
 Stash lives in the tray. Right-click its icon for **Manage snippets…** and **Launch at sign-in**.
 
+If another app already uses Ctrl+Shift+Space, Stash opens its manager with a warning. Click the hotkey at the top of the manager and press a different combination (it must include Ctrl or Alt).
+
 ## Fill-in templates
 
 In a snippet's text:

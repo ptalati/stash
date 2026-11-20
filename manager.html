@@ -11,8 +11,15 @@
     <header class="top">
       <strong>Snippets</strong>
       <span id="status" class="muted" role="status"></span>
+      <span class="spacer"></span>
+      <span class="muted">Palette hotkey</span>
+      <button id="hotkey" type="button" class="hotkey" title="Click, then press a new key combination"></button>
       <button id="new" class="primary" type="button" title="Ctrl+N">+ New snippet</button>
     </header>
+    <div id="hotkey-banner" class="banner" role="alert" hidden>
+      <span id="hotkey-problem"></span>
+      <button id="hotkey-fix" type="button" class="primary">Choose another hotkey</button>
+    </div>
 
     <div class="cols">
       <nav class="groups" aria-label="Groups">
