@@ -29,7 +29,9 @@
 1. **Hotkey conflict UX**: tell the user (tray balloon) if Ctrl+Shift+Space is taken, and let them pick another.
 2. Error surfacing for import (currently only stderr).
 3. Unit tests for src/template.ts in the repo (checked ad hoc with node so far).
-4. Release workflow (copy World Clock's .github/workflows/release.yml), README, LICENSE.
+
+## Done (release workflow)
+- `.github/workflows/release.yml`: on a `v*` tag, checks the three version files match the tag, builds on windows-latest, publishes the release with the msi and setup.exe. Windows only.
 
 ## Later
 - Text expansion (`;gst`) as opt-in per non-sensitive snippet.
