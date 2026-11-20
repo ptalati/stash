@@ -1,0 +1,21 @@
+:root {
+  --bg: #1f2024;
+  --bg-deep: #17181b;
+  --line: #2e3036;
+  --chip: #2a2c32;
+  --sel: #2b2e38;
+  --text: #ecedef;
+  --muted: #9a9da6;
+  --accent: #8b9bff;
+  --accent-ink: #121316;
+  --warn-bg: #3a2e1a;
+  --warn: #f2b661;
+  --danger: #ff8a80;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+kbd { font-family: "JetBrains Mono", Consolas, monospace; font-size: 11px; padding: 1px 6px; border-radius: 5px; background: var(--chip); border: 1px solid #3a3d45; color: #c9cbd1; }
+.badge { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); }
+.muted { color: var(--muted); font-size: 12px; }

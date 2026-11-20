@@ -57,15 +57,32 @@ impl Store {
         fs::rename(&tmp, &self.path).map_err(|e| e.to_string())
     }
 
-    /// Stopgap until the manager window exists: replace all snippets with the
-    /// contents of a plain JSON file (array of snippets), then delete that file
-    /// so the plaintext doesn't linger.
+    /// Validate and replace the whole list (the manager always sends everything).
+    pub fn replace(&self, snippets: Vec<Snippet>) -> Result<(), String> {
+        let mut seen = std::collections::HashSet::new();
+        for s in &snippets {
+            if s.id.is_empty() || !s.id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
+                return Err(format!("Invalid snippet id: {:?}", s.id));
+            }
+            if !seen.insert(s.id.as_str()) {
+                return Err(format!("Duplicate snippet id: {}", s.id));
+            }
+            if s.name.trim().is_empty() {
+                return Err("Every snippet needs a name".into());
+            }
+        }
+        self.save(&snippets)
+    }
+
+    /// Bulk import: replace all snippets with the contents of a plain JSON file
+    /// (array of snippets), then delete that file so the plaintext doesn't linger.
     pub fn import_plain(&self, file: &Path) -> Result<usize, String> {
         let text = fs::read_to_string(file).map_err(|e| format!("{}: {e}", file.display()))?;
         let snippets: Vec<Snippet> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-        self.save(&snippets)?;
+        let n = snippets.len();
+        self.replace(snippets)?;
         let _ = fs::remove_file(file);
-        Ok(snippets.len())
+        Ok(n)
     }
 }
 

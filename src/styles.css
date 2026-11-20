@@ -1,17 +1,5 @@
-:root {
-  --bg: #1f2024;
-  --line: #2e3036;
-  --chip: #2a2c32;
-  --sel: #2b2e38;
-  --text: #ecedef;
-  --muted: #9a9da6;
-  --accent: #8b9bff;
-  --warn-bg: #3a2e1a;
-  --warn: #f2b661;
-  color-scheme: dark;
-}
+@import "./theme.css";
 
-* { box-sizing: border-box; }
 html, body { margin: 0; background: transparent; overflow: hidden; }
 body { font: 14px/1.4 Inter, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; color: var(--text); padding: 8px; }
 
@@ -39,10 +27,6 @@ body { font: 14px/1.4 Inter, "Segoe UI Variable", "Segoe UI", system-ui, sans-se
 .name { display: flex; align-items: center; gap: 8px; font-weight: 500; }
 .preview { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .preview.full { white-space: pre-line; font-family: "JetBrains Mono", Consolas, monospace; color: #c9cbd1; }
-.badge { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); }
-
-kbd { font-family: "JetBrains Mono", Consolas, monospace; font-size: 11px; padding: 1px 6px; border-radius: 5px; background: var(--chip); border: 1px solid #3a3d45; color: #c9cbd1; }
-.muted { color: var(--muted); font-size: 12px; }
 .empty { margin: 0; padding: 24px; text-align: center; color: var(--muted); }
 
 .keys { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }

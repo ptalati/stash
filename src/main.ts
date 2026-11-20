@@ -1,16 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-
-interface Snippet {
-  id: string;
-  name: string;
-  body: string;
-  keywords: string[];
-  group: string;
-  pinned: boolean;
-  sensitive: boolean;
-}
+import type { Snippet } from "./snippet";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const q = $<HTMLInputElement>("q");
@@ -171,6 +162,11 @@ document.addEventListener("keydown", (e) => {
       invoke("hide_palette");
       break;
     default:
+      if (e.ctrlKey && e.key.toLowerCase() === "e") {
+        e.preventDefault();
+        invoke("manage_snippets", { select: cur?.id ?? null });
+        break;
+      }
       // Ctrl+C copies the snippet unless the user has text selected in the search box.
       if (e.ctrlKey && e.key.toLowerCase() === "c" && cur && q.selectionStart === q.selectionEnd) {
         e.preventDefault();

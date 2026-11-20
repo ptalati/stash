@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/src/manager.css" />
+    <title>Stash — Manage snippets</title>
+    <script type="module" src="/src/manager.ts" defer></script>
+  </head>
+  <body>
+    <header class="top">
+      <strong>Snippets</strong>
+      <span id="status" class="muted" role="status"></span>
+      <button id="new" class="primary" type="button" title="Ctrl+N">+ New snippet</button>
+    </header>
+
+    <div class="cols">
+      <nav class="groups" aria-label="Groups">
+        <ul id="groups"></ul>
+      </nav>
+
+      <section class="listcol" aria-label="Snippets">
+        <input id="search" class="search" type="search" placeholder="Filter…" aria-label="Filter snippets" title="Ctrl+F" />
+        <ul id="list" class="list"></ul>
+        <p id="list-empty" class="muted pad" hidden></p>
+      </section>
+
+      <main class="editor">
+        <div id="editor" hidden>
+          <div class="grid2">
+            <label>Name <input id="f-name" maxlength="80" /></label>
+            <label>Group <input id="f-group" list="group-options" maxlength="40" placeholder="e.g. Invoicing" /></label>
+          </div>
+          <datalist id="group-options"></datalist>
+          <label>Search keywords <span class="muted">comma-separated, matched in the palette</span>
+            <input id="f-keywords" placeholder="bank, ifsc, account" />
+          </label>
+          <label class="grow">
+            <span class="row-label">Text that gets pasted
+              <button id="reveal" type="button" class="link" hidden>Show</button>
+            </span>
+            <textarea id="f-body" spellcheck="false"></textarea>
+          </label>
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="f-pinned" /> Pinned <span class="muted">— listed first in the palette</span> <span id="quick" class="muted"></span></label>
+            <label class="check"><input type="checkbox" id="f-sensitive" /> Sensitive <span class="muted">— masked in the palette, kept out of Win+V history</span></label>
+          </div>
+          <div class="actions">
+            <button id="up" type="button" title="Move up (changes Alt numbers)">Move up</button>
+            <button id="down" type="button" title="Move down">Move down</button>
+            <span class="spacer"></span>
+            <button id="delete" type="button" class="danger">Delete</button>
+          </div>
+        </div>
+        <div id="editor-empty" class="empty">
+          <p>Select a snippet, or create one with <kbd>Ctrl</kbd> <kbd>N</kbd>.</p>
+        </div>
+      </main>
+    </div>
+
+    <footer class="foot muted">Changes save automatically, encrypted to your Windows account.</footer>
+  </body>
+</html>
