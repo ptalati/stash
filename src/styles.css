@@ -1,0 +1,50 @@
+:root {
+  --bg: #1f2024;
+  --line: #2e3036;
+  --chip: #2a2c32;
+  --sel: #2b2e38;
+  --text: #ecedef;
+  --muted: #9a9da6;
+  --accent: #8b9bff;
+  --warn-bg: #3a2e1a;
+  --warn: #f2b661;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; overflow: hidden; }
+body { font: 14px/1.4 Inter, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; color: var(--text); padding: 8px; }
+
+.palette {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: 424px;
+  overflow: hidden;
+}
+
+.search { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.search input { flex: 1; background: transparent; border: 0; outline: none; color: var(--text); font: 500 16px inherit; font-family: inherit; }
+.search input::placeholder { color: var(--muted); }
+
+.section { padding: 10px 18px 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+.list { list-style: none; margin: 0; padding: 4px 8px 8px; overflow-y: auto; flex: 1; }
+.row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 8px; cursor: default; }
+.row[aria-selected="true"] { background: var(--sel); }
+.tag { width: 30px; height: 30px; flex-shrink: 0; border-radius: 7px; background: var(--chip); display: grid; place-items: center; font-size: 11px; font-weight: 600; color: var(--accent); }
+.body { flex: 1; min-width: 0; }
+.name { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.preview { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preview.full { white-space: pre-line; font-family: "JetBrains Mono", Consolas, monospace; color: #c9cbd1; }
+.badge { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); }
+
+kbd { font-family: "JetBrains Mono", Consolas, monospace; font-size: 11px; padding: 1px 6px; border-radius: 5px; background: var(--chip); border: 1px solid #3a3d45; color: #c9cbd1; }
+.muted { color: var(--muted); font-size: 12px; }
+.empty { margin: 0; padding: 24px; text-align: center; color: var(--muted); }
+
+.keys { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.keys .right { margin-left: auto; }
+.error { color: var(--warn); }
