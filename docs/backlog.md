@@ -17,10 +17,18 @@
 - Move up/down sets the order, and so the Alt+1…9 numbers. Two-click Delete.
 - Autosaves 400 ms after each change (Ctrl+S saves now); flushes on close. Ctrl+N new, Ctrl+F filter.
 
+## Done (fill-in fields)
+- `{field}` asks before pasting (same name twice = one question); `{today}` is pre-filled with the date.
+- `{{Snippet name}}` or `{{id}}` embeds another snippet; nesting allowed, loops and missing names are errors.
+- Embedding a sensitive snippet makes the result sensitive; previews mask it as "•••• <name>".
+- Palette: FILL-IN badge, form with live preview, Tab cycles fields, Enter pastes (asks once more if fields are empty), Esc back.
+- Manager shows "Asks for … · Embeds …" or the error under the body. Parser in src/template.ts.
+- New installs get a "Payment reminder (polite)" seed template.
+
 ## v1 still to do
-1. **Fill-in fields** (mockup board 3): `{client}`-style fields prompt before paste; `{{other-snippet}}` embeds another snippet, with a guard against loops.
-2. **Hotkey conflict UX**: tell the user (tray balloon) if Ctrl+Shift+Space is taken, and let them pick another.
-3. Error surfacing for import (currently only stderr).
+1. **Hotkey conflict UX**: tell the user (tray balloon) if Ctrl+Shift+Space is taken, and let them pick another.
+2. Error surfacing for import (currently only stderr).
+3. Unit tests for src/template.ts in the repo (checked ad hoc with node so far).
 4. Release workflow (copy World Clock's .github/workflows/release.yml), README, LICENSE.
 
 ## Later

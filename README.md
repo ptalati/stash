@@ -8,6 +8,17 @@ For the text you reuse all the time: GST number, bank details for invoices, repl
 - Snippets are stored encrypted with Windows DPAPI, readable only by your Windows account.
 - Sensitive snippets are masked in the palette and kept out of Win+V history.
 
+## Fill-in templates
+
+In a snippet's text:
+
+| Write | Does |
+|---|---|
+| `{client}` | Asks for a value before pasting. Use the same name twice, get asked once. |
+| `{today}` | Today's date, pre-filled (you can still change it). |
+| `{{Bank details}}` | Inserts another snippet, by name. A sensitive one makes the whole paste sensitive. |
+| `\{` `\}` | A literal brace. |
+
 ## Develop
 
 ```powershell

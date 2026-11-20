@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { quickKeys, type Snippet } from "./snippet";
+import { prepare } from "./template";
 
 type Filter = { kind: "all" } | { kind: "pinned" } | { kind: "sensitive" } | { kind: "group"; name: string };
 
@@ -19,6 +20,7 @@ const ui = {
   group: $<HTMLInputElement>("f-group"),
   keywords: $<HTMLInputElement>("f-keywords"),
   body: $<HTMLTextAreaElement>("f-body"),
+  bodyInfo: $("body-info"),
   reveal: $<HTMLButtonElement>("reveal"),
   pinned: $<HTMLInputElement>("f-pinned"),
   sensitive: $<HTMLInputElement>("f-sensitive"),
@@ -179,6 +181,33 @@ function renderEditorState() {
   const i = snippets.indexOf(s);
   ui.up.disabled = i <= 0;
   ui.down.disabled = i === snippets.length - 1;
+  renderBodyInfo(s);
+}
+
+/** Under the body: what this snippet will ask for and embed, or why it's broken. */
+function renderBodyInfo(s: Snippet) {
+  const code = (t: string) => el("code", undefined, t);
+  ui.bodyInfo.classList.remove("error");
+  try {
+    const p = prepare(s, snippets);
+    const parts: (string | Node)[] = [];
+    if (p.fields.length) {
+      parts.push("Asks for: ", p.fields.map((f) => f.label).join(", "));
+    }
+    if (p.embeds.length) {
+      if (parts.length) parts.push(" · ");
+      parts.push("Embeds: ", p.embeds.join(", "));
+      if (p.sensitive && !s.sensitive) parts.push(" (sensitive, so this pastes as sensitive)");
+    }
+    if (!parts.length) {
+      parts.push("Write ", code("{client}"), " to be asked before pasting, ", code("{today}"),
+        " for the date, ", code("{{Snippet name}}"), " to include another snippet.");
+    }
+    ui.bodyInfo.replaceChildren(...parts);
+  } catch (e) {
+    ui.bodyInfo.classList.add("error");
+    ui.bodyInfo.textContent = (e as Error).message;
+  }
 }
 
 function render() {
@@ -254,7 +283,7 @@ ui.group.addEventListener("input", () => update({ group: ui.group.value.trim() }
 ui.keywords.addEventListener("input", () =>
   update({ keywords: ui.keywords.value.split(",").map((k) => k.trim()).filter(Boolean) }),
 );
-ui.body.addEventListener("input", () => update({ body: ui.body.value }, false));
+ui.body.addEventListener("input", () => update({ body: ui.body.value }));
 ui.pinned.addEventListener("change", () => update({ pinned: ui.pinned.checked }));
 ui.sensitive.addEventListener("change", () => update({ sensitive: ui.sensitive.checked }));
 ui.reveal.addEventListener("click", () => { revealed = !revealed; renderEditorState(); });

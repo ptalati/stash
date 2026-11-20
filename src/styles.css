@@ -27,6 +27,22 @@ body { font: 14px/1.4 Inter, "Segoe UI Variable", "Segoe UI", system-ui, sans-se
 .name { display: flex; align-items: center; gap: 8px; font-weight: 500; }
 .preview { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .preview.full { white-space: pre-line; font-family: "JetBrains Mono", Consolas, monospace; color: #c9cbd1; }
+[hidden] { display: none !important; }
+.view { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.badge.fill { background: #232a4a; color: #a9b5ff; }
+
+.fill-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 15px; }
+.fill-head .right { margin-left: auto; }
+.fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 14px 16px 4px; }
+.fields label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted); min-width: 0; }
+.fields input { font: 14px inherit; font-family: inherit; color: var(--text); background: var(--bg-deep); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; width: 100%; }
+.fields input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.fill-preview { margin: 12px 16px; padding: 12px 14px; background: var(--bg-deep); border: 1px solid var(--line); border-radius: 8px; font-size: 13px; line-height: 1.7; color: #c9cbd1; white-space: pre-wrap; overflow-y: auto; flex: 1; min-height: 60px; }
+.fill-preview .field { padding: 1px 4px; border-radius: 4px; background: #2b3a2e; color: #9fe0a8; }
+.fill-preview .field.blank { background: var(--chip); color: var(--muted); }
+.fill-preview .field.current { box-shadow: 0 0 0 1px var(--accent); }
+.fill-preview .secret { color: var(--warn); }
+
 .empty { margin: 0; padding: 24px; text-align: center; color: var(--muted); }
 
 .keys { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }

@@ -107,6 +107,9 @@ fn seed() -> Vec<Snippet> {
         s("cover", "Invoice cover email",
           "Hi,\n\nPlease find attached the invoice for this month. Bank details are below.\n\nThanks",
           &["invoice", "email"], "Replies", true, false),
+        s("reminder", "Payment reminder (polite)",
+          "Hi {client},\n\nA gentle reminder that invoice {invoice no} for {amount} was due on {due date}. Bank details are below for convenience.\n\n{{bank}}\n\nThanks",
+          &["reminder", "overdue", "payment"], "Replies", false, false),
         s("upi", "UPI ID", "[YOUR UPI ID]", &["upi", "pay"], "Invoicing", true, false),
         s("address", "Office address", "[YOUR BILLING ADDRESS]", &["address"], "Invoicing", false, false),
     ]
