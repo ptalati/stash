@@ -7,8 +7,11 @@ use std::{fs, path::{Path, PathBuf}};
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Snippet {
+    /// Optional in import files; generated from the name when missing.
+    #[serde(default)]
     pub id: String,
     pub name: String,
+    #[serde(default)]
     pub body: String,
     #[serde(default)]
     pub keywords: Vec<String>,
@@ -74,16 +77,77 @@ impl Store {
         self.save(&snippets)
     }
 
-    /// Bulk import: replace all snippets with the contents of a plain JSON file
-    /// (array of snippets), then delete that file so the plaintext doesn't linger.
-    pub fn import_plain(&self, file: &Path) -> Result<usize, String> {
-        let text = fs::read_to_string(file).map_err(|e| format!("{}: {e}", file.display()))?;
-        let snippets: Vec<Snippet> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-        let n = snippets.len();
-        self.replace(snippets)?;
+    /// Bulk import from a plain JSON file (a list of snippets). Merges: a snippet
+    /// whose id already exists replaces it, everything else is added. Only `name`
+    /// is required. On success the file is deleted so the plaintext doesn't
+    /// linger; on any error it is left untouched so it can be fixed.
+    pub fn import_plain(&self, file: &Path) -> Result<ImportReport, ImportError> {
+        let text = fs::read_to_string(file).map_err(|e| match e.kind() {
+            std::io::ErrorKind::NotFound => ImportError::Missing,
+            _ => ImportError::Other(format!("Couldn't read import.json: {e}")),
+        })?;
+        let incoming: Vec<Snippet> = serde_json::from_str(text.trim_start_matches('\u{feff}'))
+            .map_err(|e| ImportError::Other(format!(
+                "import.json isn't a valid list of snippets ({e}). Each needs at least a \"name\"."
+            )))?;
+        if incoming.is_empty() {
+            return Err(ImportError::Other("import.json is an empty list: nothing to import.".into()));
+        }
+
+        let mut all = self.load().map_err(ImportError::Other)?;
+        let (mut added, mut updated) = (0, 0);
+        for (n, mut s) in incoming.into_iter().enumerate() {
+            if s.name.trim().is_empty() {
+                return Err(ImportError::Other(format!("Snippet {} in import.json has no \"name\".", n + 1)));
+            }
+            if s.id.is_empty() {
+                s.id = unique_id(&s.name, &all);
+            }
+            match all.iter_mut().find(|x| x.id == s.id) {
+                Some(existing) => { *existing = s; updated += 1; }
+                None => { all.push(s); added += 1; }
+            }
+        }
+        self.replace(all).map_err(|e| ImportError::Other(format!("Nothing imported: {e}")))?;
         let _ = fs::remove_file(file);
-        Ok(n)
+        Ok(ImportReport { added, updated })
     }
+}
+
+pub struct ImportReport {
+    pub added: usize,
+    pub updated: usize,
+}
+
+pub enum ImportError {
+    /// No import.json in the data folder.
+    Missing,
+    /// Anything else, already worded for people.
+    Other(String),
+}
+
+/// "Bank details (USD)" → "bank-details-usd", with -2, -3… if taken.
+fn unique_id(name: &str, all: &[Snippet]) -> String {
+    let mut base: String = name
+        .to_ascii_lowercase()
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect::<String>()
+        .split('-')
+        .filter(|p| !p.is_empty())
+        .collect::<Vec<_>>()
+        .join("-");
+    base.truncate(40);
+    if base.is_empty() {
+        base = "snippet".into();
+    }
+    let mut id = base.clone();
+    let mut n = 2;
+    while all.iter().any(|s| s.id == id) {
+        id = format!("{base}-{n}");
+        n += 1;
+    }
+    id
 }
 
 fn s(id: &str, name: &str, body: &str, kw: &[&str], group: &str, pinned: bool, sensitive: bool) -> Snippet {
@@ -150,4 +214,59 @@ mod crypto {
 mod crypto {
     pub fn protect(b: &[u8]) -> Result<Vec<u8>, String> { Ok(b.to_vec()) }
     pub fn unprotect(b: &[u8]) -> Result<Vec<u8>, String> { Ok(b.to_vec()) }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn temp_store(tag: &str) -> (Store, PathBuf) {
+        let dir = std::env::temp_dir().join(format!("stash-test-{tag}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        (Store::new(&dir), dir)
+    }
+
+    #[test]
+    fn import_merges_generates_ids_and_deletes_file() {
+        let (store, dir) = temp_store("merge");
+        let seeded = store.load().unwrap().len();
+        let file = dir.join("import.json");
+
+        fs::write(&file, r#"[{"name":"Bank details (USD)","body":"x"},{"id":"gstin","name":"GSTIN","body":"NEW"}]"#).unwrap();
+        let r = store.import_plain(&file).ok().unwrap();
+        assert_eq!((r.added, r.updated), (1, 1));
+        assert!(!file.exists(), "import.json should be deleted after a good import");
+
+        let all = store.load().unwrap();
+        assert_eq!(all.len(), seeded + 1);
+        assert!(all.iter().any(|s| s.id == "bank-details-usd"));
+        assert_eq!(all.iter().find(|s| s.id == "gstin").unwrap().body, "NEW");
+
+        // Same name again gets a distinct id.
+        fs::write(&file, r#"[{"name":"Bank details (USD)"}]"#).unwrap();
+        store.import_plain(&file).ok().unwrap();
+        assert!(store.load().unwrap().iter().any(|s| s.id == "bank-details-usd-2"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn import_errors_keep_the_file_and_the_store() {
+        let (store, dir) = temp_store("errors");
+        let before = store.load().unwrap().len();
+        let file = dir.join("import.json");
+
+        assert!(matches!(store.import_plain(&file), Err(ImportError::Missing)));
+
+        for bad in [r#"[{"name":"x""#, r#"[{"body":"no name"}]"#, "[]", r#"[{"name":"  "}]"#] {
+            fs::write(&file, bad).unwrap();
+            match store.import_plain(&file) {
+                Err(ImportError::Other(msg)) => assert!(!msg.is_empty()),
+                _ => panic!("expected an error for {bad}"),
+            }
+            assert!(file.exists(), "a bad import.json must be kept so it can be fixed");
+        }
+        assert_eq!(store.load().unwrap().len(), before);
+        let _ = fs::remove_dir_all(&dir);
+    }
 }

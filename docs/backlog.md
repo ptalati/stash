@@ -31,9 +31,14 @@
 - Manager top bar: click the hotkey, press a new combination (needs Ctrl or Alt). The old one stays registered if the new one fails. Tray menu shows the current hotkey.
 - Limitation: a combination another app holds never reaches Stash at all (Windows routes it to that app), so pressing it while recording does nothing; the status line says to try another. Only apps that register global hotkeys are detected; in-app shortcuts can't be.
 
+## Done (import results)
+- Import button in the manager, plus the tray item. Results show in a green/amber bar in the manager (the tray path opens the manager to show it).
+- Import merges instead of replacing: same id updates, new ones are added. Only `name` is required; missing ids are made from the name (`bank-details-usd`, then `-2`…).
+- On any error nothing changes and import.json is kept so it can be fixed; "Open data folder" button. On success the file is deleted.
+- Rust tests in store.rs (`cargo test --lib`).
+
 ## v1 still to do
-1. Error surfacing for import (currently only stderr).
-2. Unit tests for src/template.ts in the repo (checked ad hoc with node so far).
+1. Unit tests for src/template.ts in the repo (checked ad hoc with node so far).
 
 ## Done (release workflow)
 - `.github/workflows/release.yml`: on a `v*` tag, checks the three version files match the tag, builds on windows-latest, publishes the release with the msi and setup.exe. Windows only.

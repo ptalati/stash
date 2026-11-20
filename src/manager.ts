@@ -397,6 +397,39 @@ document.addEventListener(
 
 invoke<HotkeyInfo>("get_hotkey").then((info) => { hkInfo = info; renderHotkey(); });
 
+// ---------- import results ----------
+
+interface Notice { ok: boolean; text: string; offerFolder: boolean }
+
+const nt = {
+  bar: $("notice"),
+  text: $("notice-text"),
+  folder: $<HTMLButtonElement>("notice-folder"),
+  close: $<HTMLButtonElement>("notice-close"),
+};
+
+function showNotice(n: Notice | null) {
+  nt.bar.hidden = !n;
+  if (!n) return;
+  nt.bar.classList.toggle("bad", !n.ok);
+  nt.text.textContent = n.text;
+  nt.folder.hidden = !n.offerFolder;
+}
+
+async function runImport() {
+  // Write pending edits first, so the import merges into the latest list.
+  if (saveTimer !== undefined) await flush();
+  else if (saving) await saving;
+  showNotice(await invoke<Notice>("import_snippets"));
+}
+
+$("import").addEventListener("click", runImport);
+nt.folder.addEventListener("click", () => invoke("open_data_folder"));
+nt.close.addEventListener("click", () => showNotice(null));
+listen<Notice>("notice", (e) => showNotice(e.payload));
+// The tray's Import may have run before this window existed.
+invoke<Notice | null>("take_notice").then((n) => { if (n) showNotice(n); });
+
 async function load() {
   try {
     snippets = await invoke<Snippet[]>("list_snippets");

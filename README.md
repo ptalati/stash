@@ -29,6 +29,19 @@ In a snippet's text:
 | `{{Bank details}}` | Inserts another snippet, by name. A sensitive one makes the whole paste sensitive. |
 | `\{` `\}` | A literal brace. |
 
+## Importing many snippets
+
+Save a JSON list as `import.json` in the data folder (tray › **Open data folder**), then click **Import** in the manager:
+
+```json
+[
+  { "name": "GSTIN", "body": "[YOUR GSTIN]", "keywords": ["gst"], "pinned": true },
+  { "name": "Bank details", "body": "…", "group": "Invoicing", "sensitive": true }
+]
+```
+
+Only `name` is required. Snippets are added to what you have; one with the same `id` as an existing snippet replaces it. After a successful import the file is deleted, so the plain text doesn't stay on disk.
+
 ## Develop
 
 ```powershell

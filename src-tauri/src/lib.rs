@@ -8,7 +8,7 @@ use std::sync::{
     atomic::{AtomicIsize, Ordering},
     Mutex,
 };
-use store::{Snippet, Store};
+use store::{ImportError, Snippet, Store};
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -32,6 +32,20 @@ struct Hotkey {
 
 /// The tray's "Open palette" item, kept so its label can show the current hotkey.
 struct TrayOpenItem(MenuItem<Wry>);
+
+/// A message for the manager window (import results). Held here until the
+/// manager has loaded and asks for it, if the window wasn't open yet.
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Notice {
+    ok: bool,
+    text: String,
+    /// Offer an "Open data folder" button (e.g. import.json is missing).
+    offer_folder: bool,
+}
+
+#[derive(Default)]
+struct PendingNotice(Mutex<Option<Notice>>);
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -153,6 +167,43 @@ fn refresh_tray(app: &AppHandle) {
     }
 }
 
+fn data_dir(app: &AppHandle) -> std::path::PathBuf {
+    app.path().app_data_dir().unwrap_or_default()
+}
+
+fn run_import(app: &AppHandle) -> Notice {
+    let file = data_dir(app).join("import.json");
+    match app.state::<Store>().import_plain(&file) {
+        Ok(r) => {
+            let _ = app.emit("snippets-changed", ());
+            let plural = |n: usize| if n == 1 { "" } else { "s" };
+            let mut text = format!("Imported {} new snippet{}", r.added, plural(r.added));
+            if r.updated > 0 {
+                text += &format!(" and updated {} existing one{}", r.updated, plural(r.updated));
+            }
+            text += ". import.json has been deleted so the plain text doesn't linger.";
+            Notice { ok: true, text, offer_folder: false }
+        }
+        Err(ImportError::Missing) => Notice {
+            ok: false,
+            text: "There's no import.json in the data folder. Save a JSON list of snippets there as import.json, then import again.".into(),
+            offer_folder: true,
+        },
+        Err(ImportError::Other(text)) => Notice { ok: false, text, offer_folder: true },
+    }
+}
+
+/// Show a notice in the manager: straight away if it's open, else when it loads.
+fn deliver_notice(app: &AppHandle, notice: Notice) {
+    match app.get_webview_window("manager") {
+        Some(w) => {
+            let _ = w.emit("notice", notice);
+        }
+        None => *app.state::<PendingNotice>().0.lock().unwrap() = Some(notice),
+    }
+    open_manager(app, None);
+}
+
 fn hotkey_info(app: &AppHandle) -> HotkeyInfo {
     let state = app.state::<Hotkey>();
     let label = state.label.lock().unwrap().clone();
@@ -193,6 +244,21 @@ fn set_hotkey(app: AppHandle, accel: String, label: String) -> Result<HotkeyInfo
 }
 
 #[tauri::command]
+fn import_snippets(app: AppHandle) -> Notice {
+    run_import(&app)
+}
+
+#[tauri::command]
+fn take_notice(pending: State<PendingNotice>) -> Option<Notice> {
+    pending.0.lock().unwrap().take()
+}
+
+#[tauri::command]
+fn open_data_folder(app: AppHandle) {
+    let _ = std::process::Command::new("explorer").arg(data_dir(&app)).spawn();
+}
+
+#[tauri::command]
 fn hide_palette(app: AppHandle) {
     hide(&app);
 }
@@ -230,12 +296,16 @@ pub fn run() {
         )
         .manage(PrevWindow(AtomicIsize::new(0)))
         .manage(Hotkey::default())
+        .manage(PendingNotice::default())
         .invoke_handler(tauri::generate_handler![
             list_snippets,
             save_snippets,
             manage_snippets,
             get_hotkey,
             set_hotkey,
+            import_snippets,
+            take_notice,
+            open_data_folder,
             hide_palette,
             paste_snippet,
             copy_snippet
@@ -258,7 +328,7 @@ pub fn run() {
             let menu = Menu::with_items(app, &[&open, &manage, &import, &folder, &autostart, &sep, &quit])?;
             app.manage(TrayOpenItem(open.clone()));
 
-            let import_path = data_dir.join("import.json");
+            let data_dir_for_tray = data_dir.clone();
             TrayIconBuilder::with_id(TRAY_ID)
                 .icon(app.default_window_icon().unwrap().clone())
                 .tooltip("Stash")
@@ -267,17 +337,12 @@ pub fn run() {
                 .on_menu_event(move |app, e| match e.id.as_ref() {
                     "open" => show(app),
                     "manage" => open_manager(app, None),
-                    "import" => match app.state::<Store>().import_plain(&import_path) {
-                        Ok(n) => {
-                            eprintln!("Imported {n} snippets");
-                            let _ = app.emit("snippets-changed", ());
-                        }
-                        Err(e) => eprintln!("Import failed: {e}"),
-                    },
+                    "import" => {
+                        let notice = run_import(app);
+                        deliver_notice(app, notice);
+                    }
                     "folder" => {
-                        if let Some(dir) = import_path.parent() {
-                            let _ = std::process::Command::new("explorer").arg(dir).spawn();
-                        }
+                        let _ = std::process::Command::new("explorer").arg(&data_dir_for_tray).spawn();
                     }
                     "autostart" => {
                         let al = app.autolaunch();

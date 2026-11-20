@@ -14,8 +14,14 @@
       <span class="spacer"></span>
       <span class="muted">Palette hotkey</span>
       <button id="hotkey" type="button" class="hotkey" title="Click, then press a new key combination"></button>
+      <button id="import" type="button" title="Add snippets from import.json in the data folder">Import</button>
       <button id="new" class="primary" type="button" title="Ctrl+N">+ New snippet</button>
     </header>
+    <div id="notice" class="notice" role="status" hidden>
+      <span id="notice-text"></span>
+      <button id="notice-folder" type="button" hidden>Open data folder</button>
+      <button id="notice-close" type="button" class="link">Dismiss</button>
+    </div>
     <div id="hotkey-banner" class="banner" role="alert" hidden>
       <span id="hotkey-problem"></span>
       <button id="hotkey-fix" type="button" class="primary">Choose another hotkey</button>
